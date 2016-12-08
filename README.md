@@ -4,16 +4,16 @@
     - [ ] Add a Readme file (it can be plain text or markdown formatted, your choice). 
     - [ ] describe how to use the final interpreter, and 
     - [ ] for each of the numbered sections of the project there should be a section of the readme describing how much of the section you have completed.
-* (15 marks). Provide a monadic interpreter for the language that allows us to step through a program. 
-- Your program must read a source file and execute the program contained in it line by line. You can use automatically derived read instances to do the parsing, and no special error messages are needed if a parse fails. Running the program should execute the first statement, and then prompt the user to run the next statement.
+* [ ] (15 marks). Provide a monadic interpreter for the language that allows us to step through a program. 
+    - Your program must read a source file and execute the program contained in it line by line. You can use automatically derived read instances to do the parsing, and no special error messages are needed if a parse fails. Running the program should execute the first statement, and then prompt the user to run the next statement.
 * [ ] (5 marks). Extend the interpreter so that there is a new =Inspect= command 
-- the user can issue =inspect= to examine the contents of the programs variables (you can give the choice by having the user type in commands, or present a menu of options, the UI of the interpreter is up to you).
+    - the user can issue =inspect= to examine the contents of the programs variables (you can give the choice by having the user type in commands, or present a menu of options, the UI of the interpreter is up to you).
 * [ ] (10 marks). Augment the monadic interpreter so that it records the history of each assignment  
-- that is, each variable should have not only it's most recent value in the variable store, but also all of the previous values that the variable contained. Inspecting the variable during interpretation should show the full history.
+    - that is, each variable should have not only it's most recent value in the variable store, but also all of the previous values that the variable contained. Inspecting the variable during interpretation should show the full history.
 * [ ] (10 marks). Now add a "step backwards" command to the interpreter 
-- that allows the user to move the program back through statements. Use the variable history to restore the previous state of any variables as the program steps back through any assignment statements.
+    - that allows the user to move the program back through statements. Use the variable history to restore the previous state of any variables as the program steps back through any assignment statements.
 * [ ] (5 marks). Finally, you can add some static analysis to the interpreter to report on errors before the program is run. 
-- [ ] Add one of the following, or something you decide on yourself (note: this section is potentially very time consuming if you decide to do it very thoroughly -- note how few marks are available for it, and adjust your effort accordingly!)
-  - [ ] Add a check for uninitialised variable references, and report to the user when the analyser spots a code path in the program that might be reading from a variable before it is written to
-  - [ ] Have the interpreter check for unreachable code (i.e. an "else" that could never be reached because the corresponding condition is a tautology
-  - [ ] Have the interpreter check for unused variables (variables which have been assigned to but never read)
+    - [ ] Add one of the following, or something you decide on yourself (note: this section is potentially very time consuming if you decide to do it very thoroughly -- note how few marks are available for it, and adjust your effort accordingly!)
+    - [ ] Add a check for uninitialised variable references, and report to the user when the analyser spots a code path in the program that might be reading from a variable before it is written to
+    - [ ] Have the interpreter check for unreachable code (i.e. an "else" that could never be reached because the corresponding condition is a tautology
+    - [ ] Have the interpreter check for unused variables (variables which have been assigned to but never read)
