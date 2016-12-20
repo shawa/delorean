@@ -24,22 +24,40 @@ data Value = IntVal Integer
 
 type Env = Map.Map Name Value
 
-type Eval a = ExceptT String Identity a
+type Eval a = ReaderT Env (ExceptT String (StateT Integer Identity )) a
 
-runEval :: Eval a -> Either String a
-runEval ev = runIdentity (runExceptT ev)
+runEval :: Env -> Integer -> Eval a -> (Either String a, Integer)
+runEval env st ev = runIdentity (runStateT ( runExceptT ( runReaderT ev env)) st)
 
-eval :: Env -> Exp -> Eval Value
-eval   _ (Lit i) = return $ IntVal i
-eval env (Var n) = return $ fromJust $ Map.lookup n env
+tick :: (Num s, MonadState s m ) => m ()
+tick = get >>= \st -> put $ st + 1
 
-eval env (Plus e1 e2) = do e1' <- eval env e1
-                           e2' <- eval env e2
-                           case (e1', e2') of (IntVal i1, IntVal i2) -> return $ IntVal (i1 + i2)
-                                              _                      -> throwError "type error"
+  
+eval :: Exp -> Eval Value
+eval (Lit i)      = do tick
+                       return $ IntVal i
+eval (Var n)      = do tick
+                       env <- ask
+                       case Map.lookup n env of
+                         Nothing  -> throwError ("unbound variable " ++ n)
+                         Just val -> return val
 
-eval env (Abs n e) = return $ FunVal env n e
-eval env (App e1 e2) = do val1 <- eval env e1
-                          val2 <- eval env e2
-                          case val1 of FunVal env' n body -> eval (Map.insert n val2 env') body
-                                       _                  -> throwError "type error"
+eval (Plus e1 e2) = do tick
+                       e1' <- eval e1
+                       e2' <- eval e2
+                       case (e1', e2') of
+                         (IntVal i1, IntVal i2) -> return $ IntVal (i1 + i2)
+                         _                      -> throwError "type error"
+eval (Abs n e)    = do tick
+                       env <- ask
+                       return $ FunVal env n e
+
+eval (App e1 e2)  = do tick
+                       val1 <- eval e1
+                       val2 <- eval e2
+                       case val1 of
+                         FunVal env' n body -> local (const $ Map.insert n val2 env') (eval body)
+                         _                  -> throwError "type error"
+
+evaluate :: Eval a -> (Either String a, Integer)
+evaluate = runEval Map.empty 0
