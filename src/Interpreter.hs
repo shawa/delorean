@@ -1,6 +1,6 @@
 -- I want these language extensions for my syntactic sugaring tricks at the end
 
-{-# Language MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances #-} 
+{-# Language MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances #-}
 
 -- I want my own definition of lookup and I want to write my own function
 -- named "print".
@@ -31,26 +31,26 @@ data Val = I Int | B Bool
 
 data Expr = Const Val
      | Add Expr Expr | Sub Expr Expr  | Mul Expr Expr | Div Expr Expr
-     | And Expr Expr | Or Expr Expr | Not Expr 
+     | And Expr Expr | Or Expr Expr | Not Expr
      | Eq Expr Expr | Gt Expr Expr | Lt Expr Expr
      | Var String
    deriving (Eq, Show)
 
-type Name = String 
+type Name = String
 type Env = Map.Map Name Val
 
 lookup k t = case Map.lookup k t of
                Just x -> return x
                Nothing -> fail ("Unknown variable "++k)
 
--- {-- Monadic style expression evaluator, 
+-- {-- Monadic style expression evaluator,
 --  -- with error handling and Reader monad instance to carry dictionary
 --  --}
 
-type Eval a = ReaderT Env (ExceptT String Identity) a 
+type Eval a = ReaderT Env (ExceptT String Identity) a
 runEval env ex = runIdentity ( runExceptT ( runReaderT ex env) )
 
--- This evaluator could be a little neater 
+-- This evaluator could be a little neater
 
 -- Integer typed expressions
 
@@ -108,31 +108,31 @@ data Statement = Assign String Expr
                | Print Expr
                | Seq Statement Statement
                | Try Statement Statement
-               | Pass                    
+               | Pass
       deriving (Eq, Show)
 
 
 -- The 'Pass' statement is useful when making Statement an instance of
 -- Monoid later on, we never actually expect to see it in a real program.
 
-type Run a = StateT Env (ExceptT String IO) a 
-runRun p =  runExceptT ( runStateT p Map.empty) 
+type Run a = StateT Env (ExceptT String IO) a
+runRun p =  runExceptT ( runStateT p Map.empty)
 
 set :: (Name, Val) -> Run ()
 set (s,i) = state $ (\table -> ((), Map.insert s i table))
 
 exec :: Statement -> Run ()
 
-exec (Assign s v) = do st <- get  
-                       Right val <- return $ runEval st (eval v)  
+exec (Assign s v) = do st <- get
+                       Right val <- return $ runEval st (eval v)
                        set (s,val)
 
 exec (Seq s0 s1) = do exec s0 >> exec s1
 
 exec (Print e) = do st <- get
-                    Right val <- return $ runEval st (eval e) 
+                    Right val <- return $ runEval st (eval e)
                     liftIO $ System.print val
-                    return () 
+                    return ()
 
 -- The transformer libraries define an overloaded "liftIO" operation that passes the required operation along the stack of monads to the next "liftIO" in line until the actual IO monad is reached. In this case it's equivalent to :
 
@@ -226,7 +226,7 @@ instance Monoid Statement where
 -- junk = return ()
 
 -- For this reason we never expect to see it in a real "compiled"
--- statement, so there's no case for it in the exec function. 
+-- statement, so there's no case for it in the exec function.
 
 -- Converting a Program to a Statement just means running the writer monad:
 
@@ -239,18 +239,18 @@ compile p = snd . runIdentity $ runWriterT p
 run :: Program -> IO ()
 run program = do result <- runExceptT $ (runStateT $ exec $ snd $ runIdentity $ (runWriterT program)) Map.empty
                  case result of
-                      Right ( (), env ) -> return ()                     
+                      Right ( (), env ) -> return ()
                       Left exn -> System.print ("Uncaught exception: "++exn)
 
 
 -- And finally some convenience functions for our syntactic sugar:
 
 infixl 1 .=
-(.=) :: String -> Expr -> Program 
+(.=) :: String -> Expr -> Program
 var .= val = tell $ assign var val
 
 
--- if is a keyword in Haskell so I can't hide it. I renamed it so: 
+-- if is a keyword in Haskell so I can't hide it. I renamed it so:
 
 iif :: Expr -> Program -> Program -> Program
 iif cond tthen eelse = tell $ If cond (compile tthen) (compile eelse)
@@ -278,7 +278,7 @@ prog10 = do
            while ( (var "scratch") `Gt` (int 1) ) (
             do "total"   .=  "total" .* "scratch"
                "scratch" .= "scratch" .- (1::Int)
-               print $ var "scratch" 
+               print $ var "scratch"
             )
            print $ var "total"
 
