@@ -1,7 +1,5 @@
--- I want these language extensions for my syntactic sugaring tricks at the end
-
 {-# Language MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances #-}
-
+module Interpreter where
 -- I want my own definition of lookup and I want to write my own function
 -- named "print".
 
@@ -79,23 +77,18 @@ evalib op e0 e1 = do e0' <- eval e0
 -- Evaluate an expression
 
 eval :: Expr -> Eval Val
-eval (Const v) = return v
-eval (Add e0 e1) = do evali (+) e0 e1
-eval (Sub e0 e1) = do evali (-) e0 e1
-eval (Mul e0 e1) = do evali (*) e0 e1
-eval (Div e0 e1) = do evali div e0 e1
-
-eval (And e0 e1) = do evalb (&&) e0 e1
-eval (Or e0 e1) = do evalb (||) e0 e1
-
-eval (Not e0  ) = do evalb (const not) e0 (Const (B True))
-
-eval (Eq e0 e1) = do evalib (==) e0 e1
-eval (Gt e0 e1) = do evalib (>) e0 e1
-eval (Lt e0 e1)  = do evalib (<) e0 e1
-
-eval (Var s) = do env <- ask
-                  lookup s env
+eval (Const v   ) = return v
+eval (Add e0 e1 ) = evali (+) e0 e1
+eval (Sub e0 e1 ) = evali (-) e0 e1
+eval (Mul e0 e1 ) = evali (*) e0 e1
+eval (Div e0 e1 ) = evali div e0 e1
+eval (And e0 e1 ) = evalb (&&) e0 e1
+eval (Or  e0 e1 ) = evalb (||) e0 e1
+eval (Not e0    ) = evalb (const not) e0 (Const (B True))
+eval (Eq  e0 e1 ) = evalib (==) e0 e1
+eval (Gt  e0 e1 ) = evalib (>) e0 e1
+eval (Lt  e0 e1 ) = evalib (<) e0 e1
+eval (Var s     ) = ask >>= \env -> lookup s env
 
 
 -- {-------------------------------------------------------------------}
@@ -285,7 +278,3 @@ prog10 = do
 -- to run it just evaluate
 
 -- run prog10
-
-
-
-
