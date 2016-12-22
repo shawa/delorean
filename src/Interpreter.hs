@@ -91,14 +91,38 @@ set varname val = state $ \table -> ( (), Map.insert varname val table)
 type Runnable a = StateT Env (ExceptT String IO) a
 runRunnable runnable = runExceptT $ runStateT runnable Map.empty
 
+exec :: Statement -> Runnable ()
+exec (Seq stmt1 stmt2) = do execute stmt1
+                            exec stmt2
+
+exec (Assign varname expr) = do env <- get
+                                Right val <- return $ runEval env $ eval expr
+                                set varname val
+
+exec (Print expr) = do env <- get
+                       Right val <- return $ runEval env (eval expr)
+                       liftIO $ print val
+
+exec (If expr stmt1 stmt2) = do env <- get
+                                Right (B val) <- return $ runEval env $ eval expr
+                                if val then exec stmt1 else exec stmt2
+
+exec (While expr stmt) = do env <- get
+                            Right (B val) <- return $ runEval env $ eval expr
+                            if val then exec stmt >> exec (While expr stmt) else return ()
+
+exec (Try tryblock catchblock) = do catchError (exec tryblock) (\_ -> exec catchblock)
+
+exec Pass = return ()
+
 execute :: Statement -> Runnable ()
-execute (Seq stmt1 stmt2) = execute stmt1 >> execute stmt2
-execute (Assign varname expr) = do env <- get
-                                   Right val <- return $ runEval env (eval expr)
-                                   set varname val
-
-execute (Print expr) = do env <- get
-                          Right val <- return $ runEval env (eval expr)
-                          liftIO $ print val
-
-execute Pass = return ()
+execute stmt = do liftIO $ print stmt
+                  _ <- liftIO $ getLine
+                  exec stmt
+  
+testprog = exec $ mconcat [ (Assign "a" (Const (I 50)))
+                          , (Assign "b" (Const (I 20)))
+                          , (Assign "c" (Add (Var "a") (Var "b")))
+                          , (Print (Var "c"))
+                          , (If (Gt (Var "b") (Var "a")) (Print (Var "b")) (Print (Var "a")))
+                          ]
