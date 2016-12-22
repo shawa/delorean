@@ -1,19 +1,8 @@
 {-# Language MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances #-}
 module Interpreter where
 
---I want my own definition of lookup and I want to write my own function
---named "print".
-
-import Prelude hiding (lookup, print)
-
 import qualified Data.Map as Map
 import Data.Maybe
-
---I want to get at the standard "print" function using the name System.print
-
-import qualified System.IO as System
-
---I plan to use these monads to construct the parts of my interpreter
 
 import Control.Monad.Identity
 import Control.Monad.Except
@@ -21,9 +10,6 @@ import Control.Monad.Reader
 import Control.Monad.State
 import Control.Monad.Writer
 
---{-------------------------------------------------------------------}
---{- The pure expression language                                    -}
---{-------------------------------------------------------------------}
 
 data Val = I Int | B Bool
            deriving (Eq, Show)
@@ -38,9 +24,6 @@ data Expr = Const Val
 type Name = String
 type Env = Map.Map Name Val
 
-lookup k t = case Map.lookup k t of
-               Just x -> return x
-               Nothing -> fail ("Unknown variable "++k)
 
 --{-- Monadic style expression evaluator,
 -- -- with error handling and Reader monad instance to carry dictionary
@@ -94,7 +77,10 @@ eval (Gt e0 e1) = do evalib (>) e0 e1
 eval (Lt e0 e1) = do evalib (<) e0 e1
 
 eval (Var s) = do env <- ask
-                  lookup s env
+                  resolve s env
+                  where resolve varname table = case Map.lookup varname table of
+                                                  Just x  -> return x
+                                                  Nothing -> fail ("Unknown variable "++varname)
 
 --{-------------------------------------------------------------------}
 --{- The statement language                                          -}
@@ -112,13 +98,3 @@ data Statement = Assign String Expr
 instance Monoid Statement where
   mempty = Pass
   mappend = Seq
-
-
-testStmts :: [Statement]
-testStmts = [ Assign "a" (Const (I 10))
-            , Assign "b" (Const (I 20))
-            , Assign "c" (Add (Var "b") (Var "b"))
-            , Print (Var "c")
-            ]
-
-testProg = mconcat testStmts
