@@ -1,7 +1,5 @@
---I want these language extensions for my syntactic sugaring tricks at the end
-
 {-# Language MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances #-}
-module Delorean where
+module Interpreter where
 
 --I want my own definition of lookup and I want to write my own function
 --named "print".
@@ -114,3 +112,13 @@ data Statement = Assign String Expr
 instance Monoid Statement where
   mempty = Pass
   mappend = Seq
+
+
+testStmts :: [Statement]
+testStmts = [ Assign "a" (Const (I 10))
+            , Assign "b" (Const (I 20))
+            , Assign "c" (Add (Var "b") (Var "b"))
+            , Print (Var "c")
+            ]
+
+testProg = mconcat testStmts
