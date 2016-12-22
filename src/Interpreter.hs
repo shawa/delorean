@@ -70,11 +70,11 @@ eval (Var s) = do env <- ask
                                                   Just x  -> return x
                                                   Nothing -> fail ("Unknown variable "++varname)
 
-data Statement = Assign String Expr
+data Statement = Seq Statement Statement
+               | Assign String Expr
+               | Print Expr
                | If Expr Statement Statement
                | While Expr Statement
-               | Print Expr
-               | Seq Statement Statement
                | Try Statement Statement
                | Pass
       deriving (Eq, Show)
@@ -83,3 +83,22 @@ instance Monoid Statement where
   mempty = Pass
   mappend = Seq
 
+
+set :: Name -> Val -> Runnable ()
+set varname val = state $ \table -> ( (), Map.insert varname val table)
+
+
+type Runnable a = StateT Env (ExceptT String IO) a
+runRunnable runnable = runExceptT $ runStateT runnable Map.empty
+
+execute :: Statement -> Runnable ()
+execute (Seq stmt1 stmt2) = execute stmt1 >> execute stmt2
+execute (Assign varname expr) = do env <- get
+                                   Right val <- return $ runEval env (eval expr)
+                                   set varname val
+
+execute (Print expr) = do env <- get
+                          Right val <- return $ runEval env (eval expr)
+                          liftIO $ print val
+
+execute Pass = return ()
