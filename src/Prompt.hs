@@ -16,7 +16,7 @@ data Command = Step
              deriving (Show)
 
 parseInput :: String -> Command
-parseInput s = either (\_ -> Undefined) id $ parse parseCommand [] s
+parseInput = either (const Undefined) id . parse parseCommand []
 
 parseCommand :: Parser Command
 parseCommand =  parseNullary "step"    Step
@@ -36,4 +36,4 @@ parseCommand =  parseNullary "step"    Step
 
     stringOrInitial str@(c:_) = try (string str) <|> string [c]
     -- this way, the user can call a command by typing either the
-    -- whole thing, or just it's first character
+    -- whole thing, or just its first character

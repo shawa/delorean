@@ -90,7 +90,7 @@ prompt stmt = do
       prompt stmt
 
     Help -> do
-      liftIO $ putStrLn "Available commands: help, step, list, dump inspect <variable name>"
+      liftIO $ putStrLn helpString
       prompt stmt
 
     List -> do
@@ -101,3 +101,14 @@ prompt stmt = do
       liftIO $ putStrLn $ "Unknown command `" ++ cmd ++ "`" ++
                           "\nType `help` or just `h` for a list of commands"
       prompt stmt
+
+
+helpString :: String
+helpString = "  Available commands: \n\
+             \    h help: Print this message\n\
+             \    s step: Execute one statement of the program\n\
+             \    l list: List the current statement\n\
+             \    d dump: Dump out the whole var table\n\
+             \\
+             \    i inspect <variable name>:\n\
+             \         Inspect given variable's content\n"
