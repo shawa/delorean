@@ -14,9 +14,12 @@ getArgOrExit = getArgOrExitWith patterns
 parse :: String -> Statement
 parse string = let statements = read string :: [Statement]
                in mconcat statements
-  
+
 main = do
   args <- parseArgsOrExit patterns =<< getArgs
   infile <- args `getArgOrExit` (argument "infile")
   programsource <- reaFile infile
   execute $ parse programsource
+
+-- main monadic executer thing with a stateT of the env
+-- but one secret trick! the env is really zipper over a list of previous/future envs
