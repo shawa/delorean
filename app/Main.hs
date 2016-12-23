@@ -1,11 +1,12 @@
 {-#LANGUAGE QuasiQuotes#-}
-import Statement
-
 import Control.Monad (when)
 import Data.Char (toUpper)
 import System.Environment (getArgs)
 
 import System.Console.Docopt
+
+import Statement
+import Interpreter
 
 patterns :: Docopt
 patterns = [docoptFile|USAGE.txt|]
