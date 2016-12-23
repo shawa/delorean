@@ -10,11 +10,14 @@ import qualified Data.Map as Map
 import Control.Monad.State
 import Control.Monad.Except
 
-type Run a = StateT Env (ExceptT String IO) a
-runRun run = runExceptT $ runStateT run Map.empty
+type Run a = StateT [Env] (ExceptT String IO) a
+
+runRun run = runExceptT $ runStateT run [Map.empty]
 
 set :: Name -> Val -> Run ()
-set varname val = state $ \table -> ( (), Map.insert varname val table)
+set varname val = state $ \envs -> ( (), (Map.insert varname val (head envs)):envs)
+  -- this is a bit dirty, but it's good for now; each time a variable is updated,
+  -- we push a whole new environment onto the ever-growing list of environments
 
 exec :: Statement -> Run ()
 exec (stmt1 :. stmt2) = do
@@ -25,30 +28,34 @@ exec (stmt1 :. stmt2) = do
   --- question to ask, so we only trigger the prompt on the first one
 
 exec (Assign varname expr) = do
-  env <- get
+  envs <- get
+  let env = head envs
   Right val <- return $ runEval env $ eval expr
   set varname val
 
 exec (Print expr) = do
-  env <- get
+  envs <- get
+  let env = head envs
   Right val <- return $ runEval env $ eval expr
   liftIO $ print val
 
 exec (If expr stmt1 stmt2) = do
-  env <- get
+  envs <- get
+  let env = head envs
   Right (B val) <- return $ runEval env $ eval expr
-  if val then exec stmt1 else exec stmt2
+  if val then prompt stmt1 else prompt stmt2
 
-exec (While expr stmt) = do
-  env <- get
+exec line@(While expr stmt) = do
+  envs <- get
+  let env = head envs
   Right (B val) <- return $ runEval env $ eval expr
   if val
-  then exec stmt >> exec (While expr stmt)
+  then prompt stmt >> exec line
   else return ()
 
 exec (Try tryblock catchblock) = do
   catchError (exec tryblock) (\_ -> exec catchblock)
-
+  
 exec Pass = return ()
 
 prompt :: Statement -> Run ()
@@ -62,12 +69,13 @@ prompt stmt = do
       exec stmt
 
     Dump -> do
-      env <- get
-      liftIO $ print env
+      envs <- get
+      liftIO $ print envs
       prompt stmt
 
     Inspect varname -> do
-      env <- get
+      envs <- get
+      let env = head envs
       var <- return $ Map.lookup varname env
       liftIO $ case var of Just val -> putStrLn $ varname ++ " = " ++ (show val)
                            Nothing  -> putStrLn $ "Undefined variable `" ++ varname ++ "`"

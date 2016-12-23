@@ -47,6 +47,7 @@ eval (Lt e0 e1) = do evalib (<) e0 e1
 
 eval (Var s) = do env <- ask
                   resolve s env
-                  where resolve varname table = case Map.lookup varname table of
-                                                  Just x  -> return x
-                                                  Nothing -> fail ("Unknown variable "++varname)
+                  where resolve varname table =
+                          case Map.lookup varname table of
+                            Just x  -> return x
+                            Nothing -> fail ("Unknown variable "++varname)
