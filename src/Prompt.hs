@@ -10,6 +10,7 @@ import Expression (Name)
 data Command = Step
              | Dump
              | Help
+             | List
              | Inspect Name
              | Undefined
              deriving (Show)
@@ -18,18 +19,14 @@ parseInput :: String -> Command
 parseInput s = either (\_ -> Undefined) id $ parse parseCommand [] s
 
 parseCommand :: Parser Command
-parseCommand =  parseStep
-            <|> parseDump
-            <|> parseHelp
-            <|> parseInspect
+parseCommand =  parseNullary "step"    Step
+            <|> parseNullary "dump"    Dump
+            <|> parseNullary "help"    Help
+            <|> parseNullary "list"    List
+            <|> parseUnary   "inspect" Inspect
   where
-
-    parseStep    = parseNullary "step"    Step
-    parseDump    = parseNullary "dump"    Dump
-    parseHelp    = parseNullary "help"    Help
-    parseInspect = parseUnary   "inspect" Inspect
-
     parseNullary cmdName cmd = stringOrInitial cmdName >> eof >> return cmd
+
     parseUnary   cmdName cmd = do
       stringOrInitial cmdName
       skipMany1 space

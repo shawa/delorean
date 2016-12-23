@@ -47,7 +47,7 @@ exec (Assign varname expr) = do
 
 exec (Print expr) = do
   env <- get
-  Right val <- return $ runEval env (eval expr)
+  Right val <- return $ runEval env $ eval expr
   liftIO $ print val
 
 exec (If expr stmt1 stmt2) = do
@@ -69,21 +69,35 @@ exec Pass = return ()
 
 prompt :: Statement -> Run ()
 prompt stmt = do
-  liftIO $ do putStrLn $ "  | " ++ show stmt
-              putStr "delorean> "
-              hFlush stdout
-
+  liftIO $ putStr "delorean> " >>  hFlush stdout
   cmd <- liftIO getLine
   command <- return $ parseInput cmd
 
   case command of
-    Step -> exec stmt
+    Step -> do
+      exec stmt
+
+    Dump -> do
+      env <- get
+      liftIO $ print env
+      prompt stmt
+
     Inspect varname -> do
       env <- get
       var <- return $ Map.lookup varname env
       liftIO $ case var of Just val -> putStrLn $ varname ++ " " ++ (show val)
                            Nothing  -> putStrLn $ "Undefined variable `" ++ varname ++ "`"
       prompt stmt
+
     Help -> do
-      liftIO $ putStrLn "Available commands: help, step, inspect <variable name>"
+      liftIO $ putStrLn "Available commands: help, step, list, dump inspect <variable name>"
+      prompt stmt
+
+    List -> do
+      liftIO $ do putStrLn $ ">>> " ++ (show stmt)
+      prompt stmt
+
+    Undefined -> do
+      liftIO $ putStrLn $ "Unknown command `" ++ cmd ++ "`" ++
+                          "\nType `help` or just `h` for a list of commands"
       prompt stmt

@@ -20,5 +20,5 @@ main = do
   args <- parseArgsOrExit patterns =<< getArgs
   infile <- args `getArgOrExit` (argument "infile")
   programsource <- readFile infile
-  runRun $ exec $ parse programsource
+  runRun $ prompt $ parse programsource
   return ()
