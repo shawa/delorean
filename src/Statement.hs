@@ -9,6 +9,7 @@ import Control.Monad.State
 import System.IO
 
 import Expression
+import Prompt
 
 data Statement = Seq Statement Statement
                | Assign String Expr
@@ -71,11 +72,18 @@ prompt stmt = do
   liftIO $ do putStrLn $ "  | " ++ show stmt
               putStr "delorean> "
               hFlush stdout
-  cmd <- liftIO getLine
 
-  case cmd of "step" -> exec stmt
-              string -> do env <- get
-                           var <- return $ Map.lookup string env
-                           liftIO $ case var of Just val -> putStrLn $ string ++ " " ++ (show val)
-                                                Nothing  -> putStrLn $ "Undefined variable `" ++ string ++ "`"
-                           prompt stmt
+  cmd <- liftIO getLine
+  command <- return $ parseInput cmd
+
+  case command of
+    Step -> exec stmt
+    Inspect varname -> do
+      env <- get
+      var <- return $ Map.lookup varname env
+      liftIO $ case var of Just val -> putStrLn $ varname ++ " " ++ (show val)
+                           Nothing  -> putStrLn $ "Undefined variable `" ++ varname ++ "`"
+      prompt stmt
+    Help -> do
+      liftIO $ putStrLn "Available commands: help, step, inspect <variable name>"
+      prompt stmt

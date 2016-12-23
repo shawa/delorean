@@ -8,8 +8,9 @@ import Text.Parsec.Char
 import Expression (Name)
 
 data Command = Step
-             | Inspect Name
+             | Dump
              | Help
+             | Inspect Name
              | Undefined
              deriving (Show)
 
@@ -17,25 +18,24 @@ parseInput :: String -> Command
 parseInput s = either (\_ -> Undefined) id $ parse parseCommand [] s
 
 parseCommand :: Parser Command
-parseCommand =
-  parseStep <|> parseInspect <|> parseHelp
+parseCommand =  parseStep
+            <|> parseDump
+            <|> parseHelp
+            <|> parseInspect
   where
-    parseStep = do
-      stringOrInitial "step"
-      eof
-      return Step
 
-    parseInspect = do
-      stringOrInitial "inspect"
+    parseStep    = parseNullary "step"    Step
+    parseDump    = parseNullary "dump"    Dump
+    parseHelp    = parseNullary "help"    Help
+    parseInspect = parseUnary   "inspect" Inspect
+
+    parseNullary cmdName cmd = stringOrInitial cmdName >> eof >> return cmd
+    parseUnary   cmdName cmd = do
+      stringOrInitial cmdName
       skipMany1 space
-      varName <- many1 alphaNum
+      argValue <- many1 alphaNum
       eof
-      return $ Inspect varName
-
-    parseHelp = do
-      stringOrInitial "help"
-      eof
-      return Help
+      return $ cmd argValue
 
     stringOrInitial str@(c:_) = try (string str) <|> string [c]
     -- this way, the user can call a command by typing either the
