@@ -1,5 +1,5 @@
 {-#LANGUAGE QuasiQuotes#-}
-import Interpreter (execute, Statement)
+import Interpreter 
 import Control.Monad (when)
 import Data.Char (toUpper)
 import System.Environment (getArgs)
@@ -18,8 +18,9 @@ parse string = let statements = read string :: [Statement]
 main = do
   args <- parseArgsOrExit patterns =<< getArgs
   infile <- args `getArgOrExit` (argument "infile")
-  programsource <- reaFile infile
-  execute $ parse programsource
+  programsource <- readFile infile
+  runRunnable $ exec $ parse programsource
+  return ()
 
 -- main monadic executer thing with a stateT of the env
 -- but one secret trick! the env is really zipper over a list of previous/future envs

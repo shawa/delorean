@@ -12,7 +12,7 @@ category:            Web
 build-type:          Simple
 cabal-version:       >=1.10
 extra-source-files:  README.org
-
+                   , USAGE.txt
 library
     hs-source-dirs: src
     exposed-modules: Interpreter

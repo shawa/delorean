@@ -12,14 +12,14 @@ import Control.Monad.Writer
 
 
 data Val = I Int | B Bool
-           deriving (Eq, Show)
+           deriving (Eq, Show, Read)
 
 data Expr = Const Val
      | Add Expr Expr | Sub Expr Expr | Mul Expr Expr | Div Expr Expr
      | And Expr Expr | Or  Expr Expr | Not Expr
      | Eq  Expr Expr | Gt  Expr Expr | Lt  Expr Expr
      | Var String
-   deriving (Eq, Show)
+   deriving (Eq, Show, Read)
 
 type Name = String
 type Env = Map.Map Name Val
@@ -77,7 +77,7 @@ data Statement = Seq Statement Statement
                | While Expr Statement
                | Try Statement Statement
                | Pass
-      deriving (Eq, Show)
+      deriving (Eq, Show, Read)
 
 instance Monoid Statement where
   mempty = Pass
@@ -117,7 +117,7 @@ exec Pass = return ()
 
 execute :: Statement -> Runnable ()
 execute stmt = do liftIO $ print stmt
-                  _ <- liftIO $ getLine
+                  _ <- liftIO getLine
                   exec stmt
   
 testprog = exec $ mconcat [ (Assign "a" (Const (I 50)))
