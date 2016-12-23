@@ -15,10 +15,11 @@ extra-source-files:  README.org
                    , USAGE.txt
 library
     hs-source-dirs: src
-    exposed-modules: Statement, Expression
+    exposed-modules: Statement, Expression, Prompt
     build-depends: base >= 4.7 && < 5
                  , containers
                  , mtl
+                 , parsec
     default-language: Haskell2010
 
 executable delorean-exe
