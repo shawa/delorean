@@ -15,7 +15,7 @@ data Command = Step
 
 parseInput :: String -> Command
 parseInput s = either (\_ -> Undefined) id $ parse parseCommand [] s
-  
+
 parseCommand :: Parser Command
 parseCommand =
   parseStep <|> parseInspect <|> parseHelp
@@ -38,3 +38,5 @@ parseCommand =
       return Help
 
     stringOrInitial str@(c:_) = try (string str) <|> string [c]
+    -- this way, the user can call a command by typing either the
+    -- whole thing, or just it's first character
