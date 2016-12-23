@@ -15,7 +15,7 @@ extra-source-files:  README.org
                    , USAGE.txt
 library
     hs-source-dirs: src
-    exposed-modules: Interpreter, Statement, Expression
+    exposed-modules: Statement, Expression
     build-depends: base >= 4.7 && < 5
                  , containers
                  , mtl

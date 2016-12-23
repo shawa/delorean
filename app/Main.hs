@@ -1,5 +1,4 @@
 {-#LANGUAGE QuasiQuotes#-}
-import Interpreter
 import Statement
 
 import Control.Monad (when)
