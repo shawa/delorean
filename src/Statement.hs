@@ -11,19 +11,27 @@ import System.IO
 import Expression
 import Prompt
 
-data Statement = Seq Statement Statement
+data Statement = Statement :. Statement
                | Assign String Expr
                | Print Expr
                | If Expr Statement Statement
                | While Expr Statement
                | Try Statement Statement
                | Pass
-      deriving (Eq, Show, Read)
+               deriving (Eq, Read)
+
+instance Show Statement where
+  show (s1 :. s2  ) = show s1 ++ "\n" ++ show s2
+  show (Assign n e) = n ++ " <- " ++ show e
+  show (Print e   ) = "print " ++ show e
+  show (If e s1 s2) = "if "    ++ show e ++ " then " ++ show s1 ++ " else " ++ show s2 ++ " fi"
+  show (While e s ) = "while " ++ show e ++ " do " ++ show s ++ " done"
+  show (Try s1 s2 ) = "try "   ++ show s1 ++ " rescue " ++ show s2 ++  " end"
+  show Pass         = "pass"
 
 instance Monoid Statement where
   mempty = Pass
-  mappend = Seq
-
+  mappend = (:.)
 
 set :: Name -> Val -> Run ()
 set varname val = state $ \table -> ( (), Map.insert varname val table)
@@ -33,7 +41,7 @@ type Run a = StateT Env (ExceptT String IO) a
 runRun run = runExceptT $ runStateT run Map.empty
 
 exec :: Statement -> Run ()
-exec (Seq stmt1 stmt2) = do
+exec (stmt1 :. stmt2) = do
   prompt stmt1
   exec stmt2
   -- the second 'statement' is always a huge compound statement
@@ -85,7 +93,7 @@ prompt stmt = do
     Inspect varname -> do
       env <- get
       var <- return $ Map.lookup varname env
-      liftIO $ case var of Just val -> putStrLn $ varname ++ " " ++ (show val)
+      liftIO $ case var of Just val -> putStrLn $ varname ++ " = " ++ (show val)
                            Nothing  -> putStrLn $ "Undefined variable `" ++ varname ++ "`"
       prompt stmt
 
@@ -94,7 +102,7 @@ prompt stmt = do
       prompt stmt
 
     List -> do
-      liftIO $ do putStrLn $ ">>> " ++ (show stmt)
+      liftIO $ do putStrLn $ show stmt
       prompt stmt
 
     Undefined -> do
