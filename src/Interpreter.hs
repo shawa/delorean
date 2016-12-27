@@ -6,9 +6,11 @@ import Prompt
 import System.IO
 
 import qualified Data.Map as Map
-  
+
 import Control.Monad.State
 import Control.Monad.Except
+import Data.Maybe
+import Data.List
 
 type Run a = StateT [Env] (ExceptT String IO) a
 
@@ -18,6 +20,9 @@ set :: Name -> Val -> Run ()
 set varname val = state $ \envs -> ( (), (Map.insert varname val (head envs)):envs)
   -- this is a bit dirty, but it's good for now; each time a variable is updated,
   -- we push a whole new environment onto the ever-growing list of environments
+
+hist :: Name -> [Env] -> [Val]
+hist n envs = mapMaybe (Map.lookup n) envs
 
 exec :: Statement -> Run ()
 exec (stmt1 :. stmt2) = do
@@ -56,13 +61,11 @@ exec Pass = return ()
 
 prompt :: Statement -> Run ()
 prompt stmt = do
-  liftIO $ putStr "delorean> " >>  hFlush stdout
+  liftIO $ do
+    putStr "delorean> " >>  hFlush stdout
   cmd <- liftIO getLine
-  command <- return $ parseInput cmd
-
-  case command of
-    Step -> do
-      exec stmt
+  case parseInput cmd of
+    Step -> exec stmt
 
     Dump -> do
       envs <- get
@@ -71,10 +74,9 @@ prompt stmt = do
 
     Inspect varname -> do
       envs <- get
-      let env = head envs
-      var <- return $ Map.lookup varname env
-      liftIO $ case var of Just val -> putStrLn $ varname ++ " = " ++ (show val)
-                           Nothing  -> putStrLn $ "Undefined variable `" ++ varname ++ "`"
+      liftIO $ putStrLn $ case hist varname envs of
+        [] -> "Unknown variable `"++ varname ++ "`"
+        xs -> intercalate "\n" $ map show $ dedup xs
       prompt stmt
 
     Help -> do
@@ -90,7 +92,6 @@ prompt stmt = do
                           "\nType `help` or just `h` for a list of commands"
       prompt stmt
 
-
 helpString :: String
 helpString = "  Available commands: \n\
              \    h help: Print this message\n\
@@ -100,3 +101,9 @@ helpString = "  Available commands: \n\
              \\
              \    i inspect <variable name>:\n\
              \         Inspect given variable's content\n"
+
+dedup :: Eq a => [a] -> [a]
+dedup []  = []
+dedup [x] = [x]
+dedup (x:y:xs) | x == y    = dedup (y:xs)
+               | otherwise = x:y:(dedup xs)
