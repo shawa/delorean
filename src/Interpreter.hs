@@ -28,26 +28,22 @@ exec (stmt1 :. stmt2) = do
   --- question to ask, so we only trigger the prompt on the first one
 
 exec (Assign varname expr) = do
-  envs <- get
-  let env = head envs
+  (env:_) <- get
   Right val <- return $ runEval env $ eval expr
   set varname val
 
 exec (Print expr) = do
-  envs <- get
-  let env = head envs
+  (env:_) <- get
   Right val <- return $ runEval env $ eval expr
   liftIO $ print val
 
 exec (If expr stmt1 stmt2) = do
-  envs <- get
-  let env = head envs
+  (env: _) <- get
   Right (B val) <- return $ runEval env $ eval expr
   if val then prompt stmt1 else prompt stmt2
 
 exec line@(While expr stmt) = do
-  envs <- get
-  let env = head envs
+  (env:_) <- get
   Right (B val) <- return $ runEval env $ eval expr
   if val
   then prompt stmt >> exec line
@@ -86,7 +82,7 @@ prompt stmt = do
       prompt stmt
 
     List -> do
-      liftIO $ do putStrLn $ show stmt
+      liftIO $ print stmt
       prompt stmt
 
     Undefined -> do
