@@ -5,7 +5,10 @@ import Text.Parsec
 import Text.Parsec.String
 import Text.Parsec.Char
 
+
 import Expression (Name)
+
+data Maybef a = Nothin | Juste a
 
 data Command = Step
              | Dump

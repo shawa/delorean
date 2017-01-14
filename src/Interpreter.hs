@@ -3,6 +3,7 @@ import Evaluate
 import Statement
 import Expression
 import Prompt
+import Util (dedup, pprint)
 import System.IO
 
 import qualified Data.Map as Map
@@ -12,17 +13,18 @@ import Control.Monad.Except
 import Data.Maybe
 import Data.List
 
+
 type Run a = StateT [Env] (ExceptT String IO) a
 
 runRun run = runExceptT $ runStateT run [Map.empty]
 
 set :: Name -> Val -> Run ()
-set varname val = state $ \envs -> ( (), (Map.insert varname val (head envs)):envs)
+set varname val = state $ \envs -> ( (), Map.insert varname val (head envs):envs)
   -- this is a bit dirty, but it's good for now; each time a variable is updated,
   -- we push a whole new environment onto the ever-growing list of environments
 
 hist :: Name -> [Env] -> [Val]
-hist n envs = mapMaybe (Map.lookup n) envs
+hist n = mapMaybe (Map.lookup n)
 
 exec :: Statement -> Run ()
 exec (stmt1 :. stmt2) = do
@@ -50,26 +52,21 @@ exec (If expr stmt1 stmt2) = do
 exec line@(While expr stmt) = do
   (env:_) <- get
   Right (B val) <- return $ runEval env $ eval expr
-  if val
-  then prompt stmt >> exec line
-  else return ()
+  when val $ prompt stmt >> exec line
 
-exec (Try tryblock catchblock) = do
-  catchError (exec tryblock) (\_ -> exec catchblock)
-  
+exec (Try tryblock catchblock) = catchError (exec tryblock) (\_ -> exec catchblock)
 exec Pass = return ()
 
 prompt :: Statement -> Run ()
 prompt stmt = do
-  liftIO $ do
-    putStr "delorean> " >>  hFlush stdout
+  liftIO $ putStr "delorean> " >>  hFlush stdout
   cmd <- liftIO getLine
   case parseInput cmd of
     Step -> exec stmt
 
     Dump -> do
       envs <- get
-      liftIO $ print envs
+      liftIO $ mapM_ (putStrLn . pprint) envs
       prompt stmt
 
     Inspect varname -> do
@@ -101,9 +98,3 @@ helpString = "  Available commands: \n\
              \\
              \    i inspect <variable name>:\n\
              \         Inspect given variable's content\n"
-
-dedup :: Eq a => [a] -> [a]
-dedup []  = []
-dedup [x] = [x]
-dedup (x:y:xs) | x == y    = dedup (y:xs)
-               | otherwise = x:y:(dedup xs)

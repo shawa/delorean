@@ -12,8 +12,8 @@ data Val = I Int | B Bool
            deriving (Eq, Read)
 
 instance Show Val where
-  show (I v) = show v ++ " : " ++ "Int"
-  show (B v) = show v ++ " : " ++ "Bool"
+  show (I v) = show v ++ ": " ++ "Int"
+  show (B v) = show v ++ ": " ++ "Bool"
 
 data Expr = Const Val
           | Add Expr Expr | Sub Expr Expr | Mul Expr Expr | Div Expr Expr
@@ -36,4 +36,3 @@ instance Show Expr where
   show (Gt  e1 e2) = show e1 ++ " > " ++ show e2
   show (Lt  e1 e2) = show e1 ++ " < " ++ show e2
   show (Var str  ) = str
-
