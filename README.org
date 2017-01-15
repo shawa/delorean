@@ -3,7 +3,7 @@
 * Delorean
 (A _Time Travelling_ Interpreter)
 
-_Delorean_ is a toy interpreter for a toy statement language.
+_Delorean_ is a toy interpreter for a toy statement language that supports stepping forward and back through a program's execution, with various inspection tools. It also does rudimentary static analysis.
 
 ** Usage
 The wonderful Docopt is used to define and parse the CLI. To run on a particular program:
