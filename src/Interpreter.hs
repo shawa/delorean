@@ -14,17 +14,17 @@ import Data.Maybe
 import Data.List
 
 
-type Run a = StateT [Env] (ExceptT String IO) a
+type Run a = StateT [(Statement, Env)] (ExceptT String IO) a
 
-runRun run = runExceptT $ runStateT run [Map.empty]
+runRun run = runExceptT $ runStateT run [(Pass, Map.empty)]
 
-set :: Name -> Val -> Run ()
-set varname val = state $ \envs -> ( (), Map.insert varname val (head envs):envs)
+set :: Name -> Val -> Statement -> Run ()
+set varname val stmt = state $ \envs -> ( (), ((stmt, Map.insert varname val (snd $ head envs)):envs))
   -- this is a bit dirty, but it's good for now; each time a variable is updated,
   -- we push a whole new environment onto the ever-growing list of environments
 
-ppop :: Run ()
-ppop = state $ \(_:envs) -> ( (), envs)
+ppop :: Run Statement
+ppop = state $ \(se:ses) -> (fst se, ses)
 
 hist :: Name -> [Env] -> [Val]
 hist n = mapMaybe (Map.lookup n)
@@ -37,23 +37,23 @@ exec (stmt1 :. stmt2) = do
   -- 'Do you want to run the rest of the program' would be a silly
   --- question to ask, so we only trigger the prompt on the first one
 
-exec (Assign varname expr) = do
-  (env:_) <- get
+exec stmt@(Assign varname expr) = do
+  ((_, env):_) <- get
   Right val <- return $ runEval env $ eval expr
-  set varname val
+  set varname val stmt
 
 exec (Print expr) = do
-  (env:_) <- get
+  ((_,env):_) <- get
   Right val <- return $ runEval env $ eval expr
   liftIO $ print val
 
 exec (If expr stmt1 stmt2) = do
-  (env: _) <- get
+  ((_,env):_) <- get
   Right (B val) <- return $ runEval env $ eval expr
   if val then prompt stmt1 else prompt stmt2
 
 exec line@(While expr stmt) = do
-  (env:_) <- get
+  ((_,env):_) <- get
   Right (B val) <- return $ runEval env $ eval expr
   when val $ prompt stmt >> exec line
 
@@ -68,16 +68,23 @@ prompt stmt = do
     Step -> exec stmt
 
     Back -> do
-      ppop
+      next <- ppop
+      prompt next
       prompt stmt
 
     Dump -> do
+      life <- get
+      liftIO $ print life
+      prompt stmt
+
+    Changes -> do
       envs <- get
-      liftIO $ mapM_ (putStrLn . pprint) envs
+      liftIO $ mapM_ (putStrLn . pprint . snd) envs
       prompt stmt
 
     Inspect varname -> do
-      envs <- get
+      stmtEnvs <- get
+      let envs = map snd stmtEnvs
       liftIO $ putStrLn $ case hist varname envs of
         [] -> "Unknown variable `"++ varname ++ "`"
         xs -> intercalate "\n" $ map show $ dedup xs
