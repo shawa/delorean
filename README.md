@@ -1,6 +1,4 @@
-![](http://shawa.netsoc.ie/i/OXtfSA.png)
-
-Delorean
+![](http://shawa.netsoc.ie/i/OXtfSA.png) Delorean
 ========
 
 (A **Time Travelling** Interpreter)
