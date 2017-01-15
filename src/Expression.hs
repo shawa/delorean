@@ -1,11 +1,6 @@
 module Expression where
 
 import qualified Data.Map as Map
-import Control.Monad.Identity
-import Control.Monad.Except
-import Control.Monad.Reader
-import Control.Monad.State
-import Control.Monad.Writer
 
 type Name = String
 data Val = I Int | B Bool
