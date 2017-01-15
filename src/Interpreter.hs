@@ -111,10 +111,12 @@ prompt stmt = do
 
 helpString :: String
 helpString = "  Available commands: \n\
-             \    h help: Print this message\n\
-             \    s step: Execute one statement of the program\n\
-             \    l list: List the current statement\n\
-             \    d dump: Dump out the whole var table\n\
+             \    h help    : Print this message\n\
+             \    s step    : Execute one statement of the program\n\
+             \    b back    : Undo one statement of the program \n\
+             \    l list    : List the current statement\n\
+             \    c changes : List all different states of the program\n\
+             \    d dump    : (debug) Dump out all runtime data\n\
              \\
              \    i inspect <variable name>:\n\
              \         Inspect given variable's content\n"

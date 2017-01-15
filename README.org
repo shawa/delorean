@@ -1,19 +1,131 @@
-# The Time Travelling Interpreter
+[[http://shawa.netsoc.ie/i/OXtfSA.png]]
 
-* [-] Turn your project into a 'stack' project so that it's easy for me to build and run it when you submit. (5)
-    - [ ] Add a Readme file (it can be plain text or markdown formatted, your choice). 
-    - [ ] describe how to use the final interpreter, and 
-    - [ ] for each of the numbered sections of the project there should be a section of the readme describing how much of the section you have completed.
-* [x] Provide a monadic interpreter for the language that allows us to step through a program. (15)
-    - Your program must read a source file and execute the program contained in it line by line. You can use automatically derived read instances to do the parsing, and no special error messages are needed if a parse fails. Running the program should execute the first statement, and then prompt the user to run the next statement.
-* [x] Extend the interpreter so that there is a new `Inspect` command (5 marks)
-    - the user can issue `inspect` to examine the contents of the programs variables (you can give the choice by having the user type in commands, or present a menu of options, the UI of the interpreter is up to you).
-* [ ] Augment the monadic interpreter so that it records the history of each assignment  (10 marks)
-    - that is, each variable should have not only it's most recent value in the variable store, but also all of the previous values that the variable contained. Inspecting the variable during interpretation should show the full history.
-* [ ] Now add a "step backwards" command to the interpreter (10 marks)
-    - that allows the user to move the program back through statements. Use the variable history to restore the previous state of any variables as the program steps back through any assignment statements.
-* [ ] Finally, you can add some static analysis to the interpreter to report on errors before the program is run. (5 marks)
-    - [ ] Add one of the following, or something you decide on yourself (note: this section is potentially very time consuming if you decide to do it very thoroughly -- note how few marks are available for it, and adjust your effort accordingly!)
-    - [ ] Add a check for uninitialised variable references, and report to the user when the analyser spots a code path in the program that might be reading from a variable before it is written to
-    - [ ] Have the interpreter check for unreachable code (i.e. an "else" that could never be reached because the corresponding condition is a tautology
-    - [ ] Have the interpreter check for unused variables (variables which have been assigned to but never read)
+* Delorean
+(A _Time Travelling_ Interpreter)
+
+_Delorean_ is a toy interpreter for a toy statement language.
+
+** Usage
+The wonderful Docopt is used to define and parse the CLI. To run on a particular program:
+
+#+BEGIN_SRC
+$ stack build
+$ stack exec delorean-exe -- <infile.txt>
+#+END_SRC
+
+** Intepreter
+Delorean will launch into the debug prompt. The current statement to be executed can be displayed with the ~list~ command (or, as with all of the commands, its initial ~l~)
+
+#+BEGIN_SRC
+___  __ \_______  /________________________ _______
+__  / / /  _ \_  / _  __ \_  ___/  _ \  __ `/_  __ \
+_  /_/ //  __/  /__/ /_/ /  /   /  __/ /_/ /_  / / /
+/_____/ \___//_____|____//_/    \___/\__,_/ /_/ /_/
+The Amazing Time-Travelling Interpreter!
+type `help` or `h` for a list of commands
+
+delorean> l
+a <- 50: Int
+b <- 10: Int
+b <- 30: Int
+c <- a + b
+print c
+if b > a then
+  print b
+else
+  print a
+fi
+delorean>
+#+END_SRC
+
+There is some amount of ~show~ trickery to get basic pretty printing of source listings.
+
+To execute lines of the program, use ~step~, or ~s~ for short:
+#+BEGIN_SRC
+delorean> l
+a <- 50: Int
+b <- 10: Int
+b <- 30: Int
+c <- a + b
+print c
+if b > a then
+  print b
+else
+  print a
+fi
+delorean> step
+delorean> s
+delorean> i a
+50: Int
+delorean>
+#+END_SRC
+
+
+** Variable History and Inspection
+The value of a particular variable can be inspected with the ~inspect <varname>~ command. This will print out a list of all of the values which ~<varname>~ has taken on up until the current line of execution, most recent at the top.
+
+#+BEGIN_SRC
+...
+delorean> i a
+50: Int
+delorean> i b
+30: Int
+10: Int
+delorean>
+#+END_SRC
+
+As well as inspection of a single variable, ~changes~ shows all of the different states that all of the variables have been in up until the current point:
+#+BEGIN_SRC
+
+delorean> c
+a -> 50: Int, b -> 30: Int   -- `a` is of type Int and mapped to the value 50
+a -> 50: Int, b -> 10: Int
+a -> 50: Int
+#+END_SRC
+
+** Stepping Backwards (88)
+As well as being able to step forward, Delorean can also step back through the history of the program. At each execution of a statement, the state of the program along with that statement is pushed onto the 'life' stack.
+
+When stepping back, a (Statement, Environment) pair is popped off, and the Statment Prompted for execution, the effect being that ~step~ now executes the /last-popped/ statement, before executing the statement the program was on before ~back~ was issued:
+
+#+BEGIN_SRC
+delorean> list
+a <- 50: Int
+delorean> step
+delorean> list
+b <- 10: Int
+delorean> step
+delorean> l
+b <- 30: Int
+delorean> back
+delorean> l
+b <- 10: Int
+delorean> b
+delorean> l
+a <- 50: Int
+#+END_SRC
+
+
+** Other Commands
+~dump~ will dump out the (Statement, Environment) stack used when stepping back. This is mainly useful for debugging the interpreter itself, but sure whats the harm in leaving it in:
+
+#+BEGIN_SRC
+delorean> d
+[(b <- 30: Int,fromList [("a",50: Int),("b",30: Int)]),(b <- 10: Int,
+fromList [("a",50: Int),("b",10: Int)]),(a <- 50: Int,fromList [("a",
+50: Int)]),(pass,fromList [])]
+#+END_SRC
+
+~help~ lists all available commands:
+
+#+BEGIN_SRC
+  h help    : Print this message
+  s step    : Execute one statement of the program
+  b back    : Undo one statement of the program
+  l list    : List the current statement
+  c changes : List all different states of the program
+  d dump    : (debug) Dump out all runtime data
+  i inspect <variable name>:
+       Inspect given variable's content
+#+END_SRC
+** Static Analysis
