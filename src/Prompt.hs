@@ -1,14 +1,13 @@
 {-# LANGUAGE FlexibleContexts #-}
 module Prompt where
+-- A parser for the command line. You could probably do this
+-- with regular expressions but this is more extensible.
+-- It's also a nice excuse to use monadic parser combinators
 
 import Text.Parsec
-import Text.Parsec.String
-import Text.Parsec.Char
-
+import Text.Parsec.String (Parser)
 
 import Expression (Name)
-
-data Maybef a = Nothin | Juste a
 
 data Command = Step
              | Dump
