@@ -8,7 +8,7 @@ import Expression (Name, Expr(..))
 -- statement, but not in any expression. As a proof-of-concept, we do directly
 -- this, and first make a pass over the program to get any defined variable names,
 -- then do a second pass and get all of the variable names that appear in an
--- expression. The difference (\\) of these two lists is then all of the
+-- expression. The difference of these two lists is then all of the
 -- declared, but unused variables.
 usedVars :: Statement -> [Name]
 usedVars (s1 :. s2 )    = usedVars s1 ++ usedVars s2
