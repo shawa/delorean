@@ -14,6 +14,9 @@ import Data.Maybe
 import Data.List
 
 
+-- I'll be calling this [(Statement, Env)] list the 'life stack', as it's a
+-- stack which documents the life of the program up until the most recent
+-- statement that's ben executed
 type Run a = StateT [(Statement, Env)] (ExceptT String IO) a
 
 runRun run = runExceptT $ runStateT run [(Pass, Map.empty)]
@@ -23,8 +26,9 @@ set varname val stmt = state $ \envs -> ( (), ((stmt, Map.insert varname val (sn
   -- this is a bit dirty, but it's good for now; each time a variable is updated,
   -- we push a whole new environment onto the ever-growing list of environments
 
-ppop :: Run Statement
-ppop = state $ \(se:ses) -> (fst se, ses)
+-- pop off the last (Statement, Env) pair and return the statment to execute
+pop :: Run Statement
+pop = state $ \(se:ses) -> (fst se, ses)
 
 push :: Statement -> Env -> Run ()
 push stmt env = state $ \stmtEnvs -> ((), (stmt, env):stmtEnvs)
@@ -45,6 +49,10 @@ exec stmt@(Assign varname expr) = do
   Right val <- return $ runEval env $ eval expr
   set varname val stmt
 
+-- for the rest of these, we get the most recent env by popping it
+-- as the right element off of the 'life' stack. We then do whatever
+-- the statement says to do, then push the statement and its env back
+-- on the life stack
 exec stmt@(Print expr) = do
   ((_,env):_) <- get
   Right val <- return $ runEval env $ eval expr
@@ -74,7 +82,7 @@ prompt stmt = do
     Step -> exec stmt
 
     Back -> do
-      next <- ppop
+      next <- pop
       prompt next
       prompt stmt
 
@@ -83,10 +91,13 @@ prompt stmt = do
       liftIO $ print life
       prompt stmt
 
+    -- grab all of the old envs
     Changes -> do
       envs <- get
       liftIO $ mapM_ (putStrLn . pprint . snd) envs
       prompt stmt
+      where pprint e = intercalate ", " $ map (\(k, v) -> k ++ " -> " ++ show v) $ Map.toList e
+
 
     Inspect varname -> do
       stmtEnvs <- get
