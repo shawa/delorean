@@ -14,6 +14,7 @@ data Command = Step
              | Dump
              | Help
              | List
+             | Back
              | Inspect Name
              | Undefined
              deriving (Show)
@@ -26,6 +27,7 @@ parseCommand =  parseNullary "step"    Step
             <|> parseNullary "dump"    Dump
             <|> parseNullary "help"    Help
             <|> parseNullary "list"    List
+            <|> parseNullary "back"    Back
             <|> parseUnary   "inspect" Inspect
   where
     parseNullary cmdName cmd = stringOrInitial cmdName >> eof >> return cmd

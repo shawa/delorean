@@ -23,6 +23,9 @@ set varname val = state $ \envs -> ( (), Map.insert varname val (head envs):envs
   -- this is a bit dirty, but it's good for now; each time a variable is updated,
   -- we push a whole new environment onto the ever-growing list of environments
 
+ppop :: Run ()
+ppop = state $ \(_:envs) -> ( (), envs)
+
 hist :: Name -> [Env] -> [Val]
 hist n = mapMaybe (Map.lookup n)
 
@@ -63,6 +66,10 @@ prompt stmt = do
   cmd <- liftIO getLine
   case parseInput cmd of
     Step -> exec stmt
+
+    Back -> do
+      ppop
+      prompt stmt
 
     Dump -> do
       envs <- get
