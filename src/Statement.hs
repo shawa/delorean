@@ -8,6 +8,7 @@ data Statement = Statement :. Statement -- nicer chaining, as well as AST printi
                | Try Statement Statement
                | Pass
                deriving (Eq, Read)
+infixr 0 :.
 
 instance Show Statement where
   show (s1 :. s2  ) = show s1 ++ "\n" ++ show s2

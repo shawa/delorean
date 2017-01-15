@@ -5,6 +5,7 @@ import System.Environment (getArgs)
 
 import System.Console.Docopt
 import Data.List (intersperse)
+import Data.List.Utils (replace)
 import Statement
 import Interpreter
 
@@ -14,8 +15,7 @@ patterns = [docoptFile|USAGE.txt|]
 getArgOrExit = getArgOrExitWith patterns
 
 parse :: String -> Statement
-parse string = let statements = read string :: [Statement]
-               in mconcat statements
+parse string = read (replace "\n" " " string)
 
 
 banner :: String
@@ -33,5 +33,5 @@ main = do
   infile <- args `getArgOrExit` (argument "infile")
   programsource <- readFile infile
   putStrLn banner
-  runRun $ prompt $ parse programsource
+  runRun $ prompt $! parse programsource
   return ()
