@@ -105,6 +105,7 @@ delorean> l
 a <- 50: Int
 #+END_SRC
 
+Carefull not to step back to before the start of the program; in that case the interpreter will, unfortunately, crash.
 
 ** Other Commands
 ~dump~ will dump out the (Statement, Environment) stack used when stepping back. This is mainly useful for debugging the interpreter itself, but sure whats the harm in leaving it in:

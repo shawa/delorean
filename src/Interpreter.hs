@@ -3,7 +3,6 @@ import Evaluate
 import Statement
 import Expression
 import Prompt
-import Util (dedup, pprint)
 import System.IO
 
 import qualified Data.Map as Map
@@ -47,6 +46,7 @@ exec (stmt1 :. stmt2) = do
 exec stmt@(Assign varname expr) = do
   ((_, env):_) <- get
   Right val <- return $ runEval env $ eval expr
+
   set varname val stmt
 
 -- for the rest of these, we get the most recent env by popping it
@@ -119,6 +119,16 @@ prompt stmt = do
       liftIO $ putStrLn $ "Unknown command `" ++ cmd ++ "`" ++
                           "\nType `help` or just `h` for a list of commands"
       prompt stmt
+
+
+-- why is this not in Data.List
+-- when we're showing the history of a variable, we don't want to print out that for 5
+-- consecutive lines of the program a variable's value was unchanged
+dedup :: Eq a => [a] -> [a]
+dedup []  = []
+dedup [x] = [x]
+dedup (x:y:xs) | x == y    = dedup (y:xs)
+               | otherwise = x:y:dedup xs
 
 helpString :: String
 helpString = "  Available commands: \n\
