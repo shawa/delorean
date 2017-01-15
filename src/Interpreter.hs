@@ -26,6 +26,9 @@ set varname val stmt = state $ \envs -> ( (), ((stmt, Map.insert varname val (sn
 ppop :: Run Statement
 ppop = state $ \(se:ses) -> (fst se, ses)
 
+push :: Statement -> Env -> Run ()
+push stmt env = state $ \stmtEnvs -> ((), (stmt, env):stmtEnvs)
+
 hist :: Name -> [Env] -> [Val]
 hist n = mapMaybe (Map.lookup n)
 
@@ -42,20 +45,23 @@ exec stmt@(Assign varname expr) = do
   Right val <- return $ runEval env $ eval expr
   set varname val stmt
 
-exec (Print expr) = do
+exec stmt@(Print expr) = do
   ((_,env):_) <- get
   Right val <- return $ runEval env $ eval expr
   liftIO $ print val
+  push stmt env
 
-exec (If expr stmt1 stmt2) = do
+exec stmt@(If expr stmt1 stmt2) = do
   ((_,env):_) <- get
   Right (B val) <- return $ runEval env $ eval expr
   if val then prompt stmt1 else prompt stmt2
+  push stmt env
 
-exec line@(While expr stmt) = do
+exec stmt@(While expr body) = do
   ((_,env):_) <- get
   Right (B val) <- return $ runEval env $ eval expr
-  when val $ prompt stmt >> exec line
+  when val $ prompt body >> exec stmt
+  push stmt env
 
 exec (Try tryblock catchblock) = catchError (exec tryblock) (\_ -> exec catchblock)
 exec Pass = return ()
