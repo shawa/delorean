@@ -1,0 +1,49 @@
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE GADTs #-}
+-- {-# LANGUAGE ExistentialQuantification #-}
+-- module TypedExpression where
+-- import Expression
+-- import Statement
+--
+-- data TEnv = ([Bool], [Int])
+--
+-- checkInt :: Expr -> TExpr Int
+-- checkInt (Const (I i)) = TConst (TI i)
+-- checkInt (Add e1 e2) = TAdd (checkInt e1) (checkInt e2)
+-- checkInt (Sub e1 e2) = TSub (checkInt e1) (checkInt e2)
+-- checkInt (Mul e1 e2) = TMul (checkInt e1) (checkInt e2)
+-- checkInt (Div e1 e2) = TDiv (checkInt e1) (checkInt e2)
+--
+-- checkBool :: Expr -> TExpr Bool
+-- checkBool (Const (B b)) = TConst (TB b)
+-- checkBool (And e1 e2)   = TAnd (checkBool e1) (checkBool e2)
+-- checkBool (Or e1 e2)    = TOr  (checkBool e1) (checkBool e2)
+-- checkBool (Not e1)      = TNot (checkBool e1)
+-- checkBool (Eq  e1 e2)   = TEq  (checkInt e1) (checkInt e2)
+-- checkBool (Gt  e1 e2)   = TGt  (checkInt e1) (checkInt e2)
+-- checkBool (Lt  e1 e2)   = TLt  (checkInt e1) (checkInt e2)
+--
+-- data TVal a where
+--   TI :: Int -> TVal Int
+--   TB :: Bool -> TVal Bool
+--
+-- data TExpr a where
+--   TConst :: TVal a -> TExpr a
+--   TAdd :: TExpr Int -> TExpr Int -> TExpr Int
+--   TSub :: TExpr Int -> TExpr Int -> TExpr Int
+--   TMul :: TExpr Int -> TExpr Int -> TExpr Int
+--   TDiv :: TExpr Int -> TExpr Int -> TExpr Int
+--
+--   TAnd :: TExpr Bool -> TExpr Bool -> TExpr Bool
+--   TOr  :: TExpr Bool -> TExpr Bool -> TExpr Bool
+--   TNot :: TExpr Bool -> TExpr Bool
+--
+--   TEq  :: TExpr Int -> TExpr Int -> TExpr Bool
+--   TLt  :: TExpr Int -> TExpr Int -> TExpr Bool
+--   TGt  :: TExpr Int -> TExpr Int -> TExpr Bool
+--   TVar :: Name -> TExpr a
+--
+-- typeCheck :: Statement -> Bool
+-- typeCheck (s1 :. s2) = typeCheck s1 && typeCheck s2
+-- typeCheck (Assign _ Expr)
