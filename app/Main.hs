@@ -6,8 +6,10 @@ import System.Environment (getArgs)
 import System.Console.Docopt
 import Data.List (intersperse)
 import Data.List.Utils (replace)
+
 import Statement
 import Interpreter
+import Lint
 
 patterns :: Docopt
 patterns = [docoptFile|USAGE.txt|]
@@ -33,5 +35,9 @@ main = do
   infile <- args `getArgOrExit` (argument "infile")
   programsource <- readFile infile
   putStrLn banner
-  runRun $ prompt $! parse programsource
+  let program = parse programsource
+  case unusedVarMessage program of
+    Just msg -> putStrLn msg
+    Nothing   -> return ()
+  runRun $ prompt $ program
   return ()

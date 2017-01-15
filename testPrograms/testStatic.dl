@@ -1,0 +1,7 @@
+(Assign "a" (Const (I 50))) :. (
+(Assign "b" (Const (I 10))) :. (
+(Assign "c" (Const (I 10))) :. (
+(Assign "d" (Const (I 10))) :. (
+(Assign "e" (Const (I 10))) :. (
+(Print (Var "a"))
+)))))

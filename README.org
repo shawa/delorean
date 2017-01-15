@@ -129,3 +129,34 @@ fromList [("a",50: Int),("b",10: Int)]),(a <- 50: Int,fromList [("a",
        Inspect given variable's content
 #+END_SRC
 ** Static Analysis
+Originally the plan was to use GADTs to grant static types to the Expression language, but that ended up being a lot more troublesome than initially expected.
+
+What's much easier to do is to check for declared, but unused variables!
+
+The simple approach is that ~{unused variables} = {declared variables} \ {used variables}~. We can easily define a /declared variable/  as any variable appearing in an ~(Assign <name> <expr>)~ statement, and a /used/ variable as any variable appearing in any Expression anywhere in the program.
+
+Upon opening delorean on a program with unused variables, a basic message is printed out:
+
+#+BEGIN_SRC
+___  __ \_______  /________________________ _______
+__  / / /  _ \_  / _  __ \_  ___/  _ \  __ `/_  __ \
+_  /_/ //  __/  /__/ /_/ /  /   /  __/ /_/ /_  / / /
+/_____/ \___//_____|____//_/    \___/\__,_/ /_/ /_/
+The Amazing Time-Travelling Interpreter!
+type `help` or `h` for a list of commands
+
+Yikes, variable b is defined but never used!
+delorean>
+#+END_SRC
+
+Or for a larger example:
+#+BEGIN_SRC
+Great Scott! The variables b, c, d, e are defined, but never used!
+delorean> list
+a <- 50: Int
+b <- 10: Int
+c <- 10: Int
+d <- 10: Int
+e <- 10: Int
+print a
+#+END_SRC
